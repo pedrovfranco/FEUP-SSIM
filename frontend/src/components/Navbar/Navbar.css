@@ -1,0 +1,225 @@
+@media (max-width: 1180px) 
+{
+  #menu-content > *, #master-data .card-header > button
+  {
+    font-size: 9pt !important;
+  }
+
+  #master-data .card-body > a
+  {
+    padding-left: 2em !important;
+  }
+    
+}
+
+/*
+@media (max-width: 858px) 
+{
+  #menu-content > *, #master-data .card-header > button
+  {
+    font-size: 7pt !important;
+  }
+
+  #master-data .card-body > a
+  {
+    padding-left: 0 !important;
+  }
+} */
+
+.nav-side-menu 
+{
+  font-size: 12pt;
+  font-weight: bold;
+  background-color: white;
+  width: 15%;
+  height: 100%;
+  color: #e1ffff;
+  text-align: left;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  overflow-y: auto;
+}
+
+.nav-side-menu .menu-list .menu-content 
+{
+  display: block;
+}
+
+.nav-side-menu > .logo:first-child
+{
+  width: 90px;
+  margin: auto;
+}
+
+.nav-side-menu > .logo:first-child > img 
+{
+  width: 90px;
+}
+
+.nav-side-menu > .menu-list
+{
+  border-top: solid 2px red;
+}
+
+.nav-side-menu .brand 
+{
+  background-color: #23282e;
+  line-height: 50px;
+  display: block;
+  text-align: center;
+}
+
+.nav-side-menu .toggle-btn 
+{
+  display: none;
+}
+
+.nav-side-menu ul,
+.nav-side-menu li 
+{
+  list-style: none;
+  padding: 0px;
+  line-height: 50px;
+  cursor: pointer;
+    
+}
+
+.nav-side-menu ul.collapsed.arrow:before,
+.nav-side-menu li.collapsed.arrow:before
+{
+  font-family: FontAwesome;
+  content: "\f053";
+  padding-left:10px;
+  padding-right: 10px;
+  vertical-align: middle;
+  float:right;
+  transform: rotate(-90deg);
+}
+
+
+.nav-side-menu ul .active,
+.nav-side-menu li .active
+{
+  background-color: red;
+  color: white !important;
+}
+
+.nav-side-menu li 
+{
+  padding-left: 0px;
+}
+
+.nav-side-menu li a 
+{ 
+  display: inline-block;
+  left: 5%;
+  text-decoration: none;
+  color: black; 
+  width: 100%;
+}
+
+.nav-side-menu li.active a
+{
+  color: white;
+}
+
+.nav-side-menu li a i {
+  padding-left: 10px;
+  width: 20px;
+  padding-right: 20px;
+}
+
+.nav-side-menu li:hover, #master-data > .card:hover,  #master-data > .card.active, 
+#master-data > .card .card-header:hover, #master-data > .card .card-header.active
+{
+  background-color: red;
+  -webkit-transition: all 0.5s ease;
+  -moz-transition: all 0.5s ease;
+  -o-transition: all 0.5s ease;
+  -ms-transition: all 0.5s ease;
+  transition: all 0.5s ease;
+}
+
+.nav-side-menu li:hover a, #master-data .card-header:hover button, 
+#master-data > .card .card-header.active button
+{
+  color: white;
+  -webkit-transition: all 0.2s ease;
+  -moz-transition: all 0.2s ease;
+  -o-transition: all 0.2s ease;
+  -ms-transition: all 0.2s ease;
+  transition: all 0.2s ease;
+}
+
+span[role=img]
+{
+  margin-right: 1em;
+  margin-left: 0.5em;
+}
+
+#master-data > .card
+{
+  background-color: white;
+  border: none;
+}
+
+#master-data .card-header
+{
+  padding: 0;
+  background-color: white;
+  color: black;
+  height: 50px;
+}
+
+#master-data .card-header button
+{
+  padding: 0;
+  font-size: 12pt;
+  font-weight: bold;
+  text-decoration: none;
+  color: black;
+  width: 90%;
+  text-align: left;
+}
+
+/*
+#master-data .card-header button.collapsed::after
+{
+    font-family: 'Glyphicons Halflings'; 
+    content:"\e114";
+    float: right;          
+}
+
+#master-data .card-header button::after
+{
+    font-family: 'Glyphicons Halflings'; 
+    content: "\e113";   
+    float: right;  
+} */
+
+#collapseMasterData
+{
+  background-color: white;
+}
+
+#collapseMasterData > .card-body > a
+{
+  display: block;
+  padding-left: 3em;
+  color: black;
+  text-decoration: none;
+}
+
+#collapseMasterData > .card-body > a:hover
+{
+  background-color: red;
+  color: white;
+
+  -webkit-transition: all 0.2s ease;
+  -moz-transition: all 0.2s ease;
+  -o-transition: all 0.2s ease;
+  -ms-transition: all 0.2s ease;
+  transition: all 0.2s ease;
+}
