@@ -42,13 +42,19 @@ class Navbar extends React.Component
                 
                 <div className="menu-list">
                     <ul id="menu-content" className="menu-content collapse out">
-                        <li id="nav-processes">
-                            <Link to="/processes">
-                                <span role="img" aria-label="Processes">🔨</span>
-                                Processes
+                        <li id="nav-ranking">
+                            <Link to="/ranking">
+                                <span role="img" aria-label="Ranking">📜</span>
+                                Ranking
                             </Link>
                         </li>
-                        <Accordion id="master-data">
+                        <li id="nav-rewards">
+                            <Link to="/rewards">
+                                <span role="img" aria-label="Rewards">🎁</span>
+                                Rewards
+                            </Link>
+                        </li>
+                        {/* <Accordion id="master-data">
                             <Card>
                                 <Card.Header>
                                     <Accordion.Toggle as={Button} variant="link" eventKey="master-data">
@@ -63,14 +69,7 @@ class Navbar extends React.Component
                                     </Card.Body>
                                 </Accordion.Collapse>
                             </Card> 
-                        </Accordion>
-                            
-                        <li id="nav-logs" data-toggle="collapse" data-target="#service" className="collapsed">
-                            <Link to="/logs">  
-                            <span role="img" aria-label="Logs">📋</span>
-                            Logs
-                            </Link>
-                        </li>  
+                        </Accordion> */}
                         
                         <li id="nav-settings">
                             <Link id="nav-settings" to="/settings">

@@ -1,7 +1,8 @@
 import './App.css';
-import '../Navbar/Navbar'
-import Navbar from '../Navbar/Navbar';
 import { Route, Switch, BrowserRouter} from "react-router-dom";
+import Navbar from '../Navbar/Navbar';
+import Ranking from '../Ranking/Ranking'
+import Rewards from '../Rewards/Rewards'
 
 function App() {
   return (
@@ -10,7 +11,17 @@ function App() {
             <Switch>
                 <Route
                     path="/"
-                    component={Navbar}
+                    component={Ranking}
+                    exact={true}
+                />
+                <Route
+                    path="/ranking"
+                    component={Ranking}
+                    exact={true}
+                />
+                <Route
+                    path="/rewards"
+                    component={Rewards}
                     exact={true}
                 />
             </Switch>
