@@ -12,7 +12,7 @@ from time import sleep
 import worker
 import store
 
-
+# run pade start-runtime --port 20000 main.py
 if __name__ == '__main__':
 
     agents_per_process = 6
