@@ -44,7 +44,7 @@ class PassTime(TimedBehaviour):
 
         self.notify = notify
 
-        self.create_shifts_hour = 6
+        self.create_shifts_hour = 5
         self.create_shifts_day = 1
 
     def on_time(self):
@@ -53,6 +53,9 @@ class PassTime(TimedBehaviour):
 
         if self.agent.date.hour == self.create_shifts_hour and self.agent.date.day == self.create_shifts_day:
             self.createShifts()
+
+        if self.agent.date.hour == 6:
+            self.setShifts(self.agent.date.day)
         message = ACLMessage(ACLMessage.INFORM)
         message.set_protocol(ACLMessage.FIPA_SUBSCRIBE_PROTOCOL)
         message.set_content(self.agent.date)
@@ -90,7 +93,9 @@ class PassTime(TimedBehaviour):
 
             self.agent.schedule[day] = day_shift
 
-
+    def setShifts(self, day):
+        self.agent.morning_shift = self.agent.schedule[day][1]
+        self.agent.afternoon_shift = self.agent.schedule[day][2]
 
 
 class DisplayStoreInfo(TimedBehaviour):
