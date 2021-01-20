@@ -4,10 +4,53 @@ from pade.acl.messages import ACLMessage
 from pade.acl.aid import AID
 from pade.behaviours.protocols import FipaSubscribeProtocol
 from pade.behaviours.protocols import FipaRequestProtocol
+from pade.behaviours.protocols import FipaContractNetProtocol
 
 from random import randint
 
 import macros
+import utils
+
+class BidRewards(FipaContractNetProtocol):
+
+    def __init__(self, agent):
+        super(BidRewards, self).__init__(agent=agent, message=None, is_initiator=False)
+
+    def handle_cfp(self, message):
+        if message.ontology == macros.REWARD_ONTOLOGY:
+            self.agent.call_later(1.0, self._handle_cfp, message)
+
+    def _handle_cfp(self, message):
+        if message.ontology == macros.REWARD_ONTOLOGY:
+
+            super(BidRewards, self).handle_cfp(message)
+            self.message = message
+
+            display_message(self.agent.aid.name, 'CFP message received')
+
+            answer = self.message.create_reply()
+            answer.set_performative(ACLMessage.PROPOSE)
+            answer.set_content(str(float(self.agent.effort_points/self.agent.reward_points)))
+            self.agent.send(answer)
+
+    def handle_reject_propose(self, message):
+        if message.ontology == macros.REWARD_ONTOLOGY:
+            super(BidRewards, self).handle_reject_propose(message)
+
+            display_message(self.agent.aid.name, 'REJECT_PROPOSAL message received')
+
+    def handle_accept_propose(self, message):
+        if message.ontology == macros.REWARD_ONTOLOGY:
+            super(BidRewards, self).handle_accept_propose(message)
+
+            display_message(self.agent.aid.name, 'ACCEPT_PROPOSE message received')
+
+            self.agent.reward_points += float(message.content)
+
+            answer = message.create_reply()
+            answer.set_performative(ACLMessage.INFORM)
+            answer.set_content('OK')
+            self.agent.send(answer)
 
 class RegisterInStore(FipaSubscribeProtocol):
 
@@ -62,7 +105,7 @@ class ReceiveTask(FipaRequestProtocol):
             # INFORM with worker task efficiency
             reply.set_content(local_task_efficiency)
             self.agent.send(reply)
-        
+
 
 class Worker(Agent):
 
@@ -78,12 +121,12 @@ class Worker(Agent):
 
         self.store_aid = store_aid
 
-        self.effort_points = 0
-        self.reward_points = 0
+        self.effort_points = 400
+        self.reward_points = 400
 
         msg = ACLMessage(ACLMessage.SUBSCRIBE)
         msg.set_protocol(ACLMessage.FIPA_SUBSCRIBE_PROTOCOL)
-        msg.set_content("Registering")
+        msg.set_content(utils.epgpToString(self.effort_points, self.reward_points))
         msg.add_receiver(self.store_aid)
 
         self.call_later(8.0, self.launch_subscriber_protocol, msg)
@@ -93,6 +136,9 @@ class Worker(Agent):
 
         self.receive_task = ReceiveTask(self)
         self.behaviours.append(self.receive_task)
+
+        self.bid_reward = BidRewards(self)
+        self.behaviours.append(self.bid_reward)
 
 
     def launch_subscriber_protocol(self, message):

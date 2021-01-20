@@ -1,5 +1,5 @@
 SHIFT_ONTOLOGY = "SHIFT"
 TASK_ONTOLOGY = "TASK"
-
+REWARD_ONTOLOGY = "REWARD"
 # Max EP attributed to a task
 MAX_TASK_EP = 100
