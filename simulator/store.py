@@ -171,6 +171,7 @@ class PassTime(TimedBehaviour):
                 self.closeStore()
 
             if self.agent.date.hour == 0 and self.agent.date.day == 1:
+                display_message(self.agent.aid.localname, "New startsadsigdaukdawl")
                 self.agent.stop_time = 1
                 self.agent.next_item = 1
 
@@ -197,9 +198,11 @@ class PassTime(TimedBehaviour):
             #auction time
             if self.current_item >= len(self.agent.rewards_list):
                 self.agent.next_item = 0
-                self.agent.current_item = 0
+                self.current_item = 0
                 self.agent.stop_time = 0
+                self.agent.auctioned_item = ''
             else:
+                display_message(self.agent.aid.localname, "New AUCTIONNNN")
                 self.agent.next_item = 0
                 self.startAuction(self.agent.rewards_list[self.current_item])
                 self.current_item += 1
