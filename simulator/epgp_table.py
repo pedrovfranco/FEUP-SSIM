@@ -2,6 +2,7 @@ class Epgp_table():
 
     def __init__(self):
         self.table = {}
+        self.decay_ratio = 0.1
         
 
     def add_worker(self, name):
@@ -24,7 +25,7 @@ class Epgp_table():
         if name not in self.table:
             self.add_worker(name)
 
-        self.table[name]["ep"] = self.table[name]["ep"] + amount
+        self.table[name]["ep"] += amount
 
     def add_gp(self, name, amount):
 
@@ -32,3 +33,10 @@ class Epgp_table():
             self.add_worker(name)
 
         self.table[name]["gp"] += amount
+
+    def apply_decay(self):
+        for name in  self.table:
+            self.table[name]['ep'] *= (1-self.decay_ratio)
+            self.table[name]['gp'] *= (1-self.decay_ratio)
+
+
