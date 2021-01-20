@@ -1,0 +1,5 @@
+conda create -n ssim python=3.7
+activate ssim
+conda install pip
+pip install pade
+python main.py
