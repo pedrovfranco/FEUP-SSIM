@@ -20,7 +20,7 @@ if __name__ == '__main__':
     agents = list()
 
     port = int(argv[1]) + c
-    agent_name = 'worker_{}@localhost:{}'.format(port, port)
+    agent_name = 'store_{}@localhost:{}'.format(port, port)
     agente_store = store.Store(AID(name=agent_name))
     agents.append(agente_store)
     c += 1000
