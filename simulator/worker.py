@@ -50,7 +50,8 @@ class ReceiveTask(FipaRequestProtocol):
 
             display_message(self.agent.aid.localname, 'Received task ' + message.content)
 
-            local_task_efficiency = self.agent.get_task_efficiency()
+            local_task_efficiency = self.agent.production_efficiency
+            # local_task_efficiency = self.agent.get_task_efficiency()
 
             # Change worker parameters (happiness, energy, etc)
             

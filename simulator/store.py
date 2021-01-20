@@ -11,6 +11,7 @@ import random
 
 import utils
 import macros
+import epgp_table
 
 class RegisterWorkers(FipaSubscribeProtocol):
 
@@ -72,8 +73,7 @@ class PassTime(TimedBehaviour):
         self.notify(message)
 
         # Start distributing tasks
-
-        display_message(self.agent.aid.localname, "Starting to distribute tasks")
+        display_message(self.agent.aid.localname, "Starting distributing tasks")
         current_shift = self.agent.get_current_shift()
        
         if current_shift != None:
@@ -86,20 +86,6 @@ class PassTime(TimedBehaviour):
                 message.add_receiver(worker_name)
                 message.set_content(str(self.agent.date))
                 self.agent.send(message)
-
-
-
-
-
-
-        # message = ACLMessage(ACLMessage.REQUEST)
-        # message.set_protocol(ACLMessage.FIPA_REQUEST_PROTOCOL)
-        # message.add_receiver(AID(name=time_agent_name))
-        # message.set_content('time')
-
-        # self.comport_request = CompRequest2(self, message)
-        # self.comport_temp = ComportTemporal(self, 8.0, message)
-
 
 
     def createShifts(self):
@@ -184,7 +170,11 @@ class DistributeTasks(FipaRequestProtocol):
 
     def handle_inform(self, message):
         if message.ontology == macros.TASK_ONTOLOGY:
-            display_message(self.agent.aid.localname, message.content)
+
+            self.agent.epgp.add_ep(self.message.sender.localname, macros.MAX_TASK_EP * float(message.content))
+
+            # display_message(self.agent.aid.localname, message.content)
+            # display_message(self.agent.aid.localname, self.agent.epgp.table)
 
 
 
@@ -197,6 +187,7 @@ class Store(Agent):
         self.morning_shift= list()
         self.afternoon_shift= list()
         self.schedule =  list()
+        self.epgp = epgp_table.Epgp_table()
 
         self.date = datetime.datetime(2020, 1, 1)
 
