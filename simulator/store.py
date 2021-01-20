@@ -5,6 +5,7 @@ from pade.acl.aid import AID
 from pade.behaviours.protocols import FipaSubscribeProtocol
 from pade.behaviours.protocols import TimedBehaviour
 from pade.behaviours.protocols import FipaRequestProtocol
+import pandas as pd
 
 import datetime
 import random
@@ -223,5 +224,20 @@ class Store(Agent):
 
         else:
             return []
+
+
+    def dump_epgp_table(self):
+        
+        df = pd.DataFrame()
+
+
+        for name in self.epgp.table:
+            entry = self.epgp.table[name]
+            
+            df = df.append({'name': name, 'ep': entry['ep'], 'gp': entry['gp'], 'pr': self.epgp.get_pr(name)}, ignore_index=True)
+
+            df.to_csv('store_dump.csv', index = False)
+
+
 
     
