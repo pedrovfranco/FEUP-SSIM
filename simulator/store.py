@@ -4,6 +4,7 @@ from pade.acl.messages import ACLMessage
 from pade.acl.aid import AID
 from pade.behaviours.protocols import FipaSubscribeProtocol
 from pade.behaviours.protocols import TimedBehaviour
+from pade.behaviours.protocols import FipaRequestProtocol
 
 import datetime
 import random
@@ -56,6 +57,14 @@ class PassTime(TimedBehaviour):
 
         if self.agent.date.hour == 6:
             self.setShifts(self.agent.date.day)
+        elif self.agent.date.hour == 8:
+            self.startEndShift(self.agent.morning_shift)
+        elif self.agent.date.hour == 16:
+            self.startEndShift(self.agent.morning_shift)
+            self.startEndShift(self.agent.afternoon_shift)
+        elif self.agent.date.hour == 0:
+            self.startEndShift(self.agent.afternoon_shift)
+            self.closeStore()
         message = ACLMessage(ACLMessage.INFORM)
         message.set_protocol(ACLMessage.FIPA_SUBSCRIBE_PROTOCOL)
         message.set_content(self.agent.date)
@@ -97,6 +106,25 @@ class PassTime(TimedBehaviour):
         self.agent.morning_shift = self.agent.schedule[day][1]
         self.agent.afternoon_shift = self.agent.schedule[day][2]
 
+    def closeStore(self):
+        self.agent.morning_shift = list()
+        self.agent.afternoon_shift = list()
+
+    def startEndShift(self, names):
+
+        for name in names:
+            receiver_aid = None
+            for worker in self.agent.workers_aid:
+                if worker.localname == name:
+                    receiver_aid = worker
+                    break
+            message = ACLMessage(ACLMessage.REQUEST)
+            message.set_protocol(ACLMessage.FIPA_REQUEST_PROTOCOL)
+            message.add_receiver(receiver_aid)
+            message.set_content('Change work')
+            self.agent.send(message)
+
+
 
 class DisplayStoreInfo(TimedBehaviour):
     def __init__(self, agent, time):
@@ -107,8 +135,8 @@ class DisplayStoreInfo(TimedBehaviour):
         super(DisplayStoreInfo, self).on_time()
         display_message(self.agent.aid.localname, "Number_of_workers: " + str(self.agent.number_of_workers) + "\n"
                                                 + "Workers_aid: " + utils.AIDToString(self.agent.workers_aid) + "\n"
-                                                + "Morning_shift: " + utils.AIDToString(self.agent.morning_shift) + "\n"
-                                                + "Afternoon_shift: " + utils.AIDToString(self.agent.afternoon_shift) + "\n"
+                                                + "Morning_shift: " + utils.listToString(self.agent.morning_shift) + "\n"
+                                                + "Afternoon_shift: " + utils.listToString(self.agent.afternoon_shift) + "\n"
                                                 + "Date: " + str(self.agent.date) + "\n")
 
 
