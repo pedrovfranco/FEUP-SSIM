@@ -3,14 +3,17 @@ class Epgp_table():
     def __init__(self):
         self.table = {}
         self.decay_ratio = 0.1
-        
 
-    def add_worker(self, name):
-        self.table[name] = {"ep": 400, "gp": 400}
+
+    def add_worker(self, name, ep, gp):
+        self.table[name] = {"ep": ep, "gp": gp}
+
+    def remove_worker(self, name):
+        del self.table[name]
 
     def get_entry(self, name):
         return self.table[name]
- 
+
     def get_ep(self, name):
         return self.table[name]["ep"]
 

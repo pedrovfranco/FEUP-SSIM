@@ -10,6 +10,7 @@ from pade.behaviours.protocols import FipaContractNetProtocol
 import datetime
 import random
 
+import time
 import utils
 import macros
 import epgp_table
@@ -21,6 +22,15 @@ class RewardAuction(FipaContractNetProtocol):
         self.number_of_total_rewards = len(self.agent.rewards_list)
         self.number_of_rewars_handled = 0
 
+        #need for pade to work
+        self.received_qty = 0
+        self.cfp_qty = len(self.agent.workers_aid)
+        display_message(self.agent.aid.name, 'Quantityyyyyyyy')
+        display_message(self.agent.aid.name, self.cfp_qty)
+        self.proposes_senders = list()
+
+
+
 
     def handle_all_proposes(self, proposes):
         super(RewardAuction, self).handle_all_proposes(proposes)
@@ -30,32 +40,30 @@ class RewardAuction(FipaContractNetProtocol):
         other_proposers = list()
         display_message(self.agent.aid.name, 'Analyzing proposals...')
 
-        for message in proposes:
-            content = message.content
-            epgp = float(content)
-            display_message(self.agent.aid.name,
-                            'Analyzing proposal {i}'.format(i=i))
-            display_message(self.agent.aid.name,
-                            'Ep/gp ratio: {pot}'.format(pot=epgp))
+        i = 1
+        for proponent in self.proposes_senders:
+            divide_string = proponent.find('@')
+            epgp = self.agent.epgp.get_pr(proponent[:divide_string])
+            display_message(self.agent.aid.name, 'Analyzing proposal {i}'.format(i=i))
+            display_message(self.agent.aid.name, 'Ep/gp ratio: {pot}'.format(pot=epgp))
             i += 1
             if epgp > higher_epgp:
                 if best_proposer is not None:
                     other_proposers.append(best_proposer)
 
                 higher_epgp = epgp
-                best_proposer = message.sender
+                best_proposer = proponent[:divide_string]
             else:
-                other_proposers.append(message.sender)
+                other_proposers.append(proponent[:divide_string])
 
-        display_message(self.agent.aid.name,
-                        'The best proposal was: {pot} ep/gp ratio'.format(
-                            pot=higher_epgp))
-
+        display_message(self.agent.aid.name, 'The best proposal was: {pot} ep/gp ratio'.format(pot=higher_epgp))
+        display_message(self.agent.aid.name, utils.listToString(other_proposers))
+        display_message(self.agent.aid.name, best_proposer)
         if other_proposers != []:
-            display_message(self.agent.aid.name,
-                            'Sending REJECT_PROPOSAL answers...')
+            display_message(self.agent.aid.name, 'Sending REJECT_PROPOSAL answers...')
             answer = ACLMessage(ACLMessage.REJECT_PROPOSAL)
             answer.set_protocol(ACLMessage.FIPA_CONTRACT_NET_PROTOCOL)
+            answer.set_ontology(macros.REWARD_ONTOLOGY)
             answer.set_content('')
             for agent in other_proposers:
                 answer.add_receiver(agent)
@@ -63,33 +71,44 @@ class RewardAuction(FipaContractNetProtocol):
             self.agent.send(answer)
 
         if best_proposer is not None:
-            display_message(self.agent.aid.name,
-                            'Sending ACCEPT_PROPOSAL answer...')
+            display_message(self.agent.aid.name, 'Sending ACCEPT_PROPOSAL answer...')
+
+            gp_of_reward = utils.getGpReward(self.agent.rewards_list, self.agent.auctioned_item)
+
+            self.agent.epgp.add_gp(best_proposer, gp_of_reward)
 
             answer = ACLMessage(ACLMessage.ACCEPT_PROPOSAL)
             answer.set_protocol(ACLMessage.FIPA_CONTRACT_NET_PROTOCOL)
-            answer.set_content('OK')
+            answer.set_ontology(macros.REWARD_ONTOLOGY)
+            answer.set_content(gp_of_reward)
             answer.add_receiver(best_proposer)
             self.agent.send(answer)
 
+        self.received_qty = 0
+        self.total = 0
+        self.proposes_senders = list()
+        self.agent.next_item = 1
+
 
     def handle_inform(self, message):
-        if message.ontology in self.agent.rewards_list_name:
+        if message.ontology == macros.REWARD_ONTOLOGY:
             super(RewardAuction, self).handle_inform(message)
 
             display_message(self.agent.aid.name, 'INFORM message received')
 
     def handle_refuse(self, message):
-        if message.ontology in self.agent.rewards_list_name:
+        if message.ontology == macros.REWARD_ONTOLOGY:
             super(RewardAuction, self).handle_refuse(message)
 
             display_message(self.agent.aid.name, 'REFUSE message received')
 
     def handle_propose(self, message):
-        if message.ontology in self.agent.rewards_list_name:
+        if (message.ontology == macros.REWARD_ONTOLOGY) and (message.sender.name not in self.proposes_senders):
             super(RewardAuction, self).handle_propose(message)
 
             display_message(self.agent.aid.name, 'PROPOSE message received')
+            self.proposes_senders.append(message.sender.name)
+            display_message(self.agent.aid.name, message.sender.name)
 
 class RegisterWorkers(FipaSubscribeProtocol):
 
@@ -101,6 +120,8 @@ class RegisterWorkers(FipaSubscribeProtocol):
 
         self.agent.workers_aid.append(message.sender)
         self.agent.number_of_workers += 1
+        self.epgp = utils.StringToEpgp(message.content)
+        self.agent.epgp.add_worker(message.sender.localname, self.epgp[0], self.epgp[1])
 
         reply = message.create_reply()
         reply.set_performative(ACLMessage.AGREE)
@@ -127,6 +148,7 @@ class PassTime(TimedBehaviour):
 
         self.create_shifts_hour = 5
         self.create_shifts_day = 1
+        self.current_item = 0
 
 
     def on_time(self):
@@ -150,7 +172,7 @@ class PassTime(TimedBehaviour):
 
             if self.agent.date.hour == 0 and self.agent.date.day == 1:
                 self.agent.stop_time = 1
-                self.startAuction(self.agent.rewards_list)
+                self.agent.next_item = 1
 
             message = ACLMessage(ACLMessage.INFORM)
             message.set_protocol(ACLMessage.FIPA_SUBSCRIBE_PROTOCOL)
@@ -171,10 +193,23 @@ class PassTime(TimedBehaviour):
                     message.add_receiver(worker_name)
                     message.set_content(str(self.agent.date))
                     self.agent.send(message)
+        elif self.agent.next_item == 1:
+            #auction time
+            if self.current_item >= len(self.agent.rewards_list):
+                self.agent.next_item = 0
+                self.agent.current_item = 0
+                self.agent.stop_time = 0
+            else:
+                self.agent.next_item = 0
+                self.startAuction(self.agent.rewards_list[self.current_item])
+                self.current_item += 1
+                time.sleep(1)
+
+
 
 
     def createShifts(self):
-        number_of_days = utils.daysOfMonth(self.agent.date.month)
+        number_of_days = utils.daysOfMonth(self.agent.date.month, self.agent.date.year)
         workers = utils.getWorkers(self.agent.workers_aid)
         self.agent.schedule = [[] for i in range(number_of_days)]
 
@@ -203,12 +238,12 @@ class PassTime(TimedBehaviour):
                     day_shift[random.randint(1,2)].append(worker)
 
 
-            self.agent.schedule[day] = day_shift
+            self.agent.schedule[day-1] = day_shift
 
 
     def setShifts(self, day):
-        self.agent.morning_shift = self.agent.schedule[day][1]
-        self.agent.afternoon_shift = self.agent.schedule[day][2]
+        self.agent.morning_shift = self.agent.schedule[day-1][1]
+        self.agent.afternoon_shift = self.agent.schedule[day-1][2]
 
     def closeStore(self):
         self.agent.morning_shift = list()
@@ -229,15 +264,19 @@ class PassTime(TimedBehaviour):
             message.set_content('Change work')
             self.agent.send(message)
 
-    def startAuction(self, items):
+    def startAuction(self, item):
 
-        for item in items:
-            message = ACLMessage(ACLMessage.CFP)
-            message.set_protocol(ACLMessage.FIPA_CONTRACT_NET_PROTOCOL)
-            message.set_content(item)
+        #item[0] is item name
+        self.agent.auctioned_item = item[0]
+        message = ACLMessage(ACLMessage.CFP)
+        message.set_protocol(ACLMessage.FIPA_CONTRACT_NET_PROTOCOL)
+        message.set_ontology(macros.REWARD_ONTOLOGY)
+        message.set_content(utils.itemToString(item))
 
-            for worker in self.agent.workers_aid:
-                message.add_receiver(worker)
+        for worker in self.agent.workers_aid:
+            message.add_receiver(worker)
+
+        self.agent.send(message)
 
 
 
@@ -269,7 +308,7 @@ class DistributeTasks(FipaRequestProtocol):
             self.agent.epgp.add_ep(self.message.sender.localname, macros.MAX_TASK_EP * float(message.content))
 
             # display_message(self.agent.aid.localname, message.content)
-            # display_message(self.agent.aid.localname, self.agent.epgp.table)
+            display_message(self.agent.aid.localname, self.agent.epgp.table)
 
 
 
@@ -286,15 +325,20 @@ class Store(Agent):
 
         self.date = datetime.datetime(2020, 1, 1) + datetime.timedelta(hours=1)
 
-        self.rewards_list = list()
-        self.rewards_list_name: = list()
+        self.rewards_list = [['promotion', 500], ['paid_vacation_day', 200], ['day_off', 100]]
+        self.rewards_list_name = utils.getRewardsNames(self.rewards_list)
 
+
+        #auction auxiliar variables
         self.stop_time = 0
+        self.next_item = 0
+        self.auctioned_item = ''
+
 
         self.register = RegisterWorkers(self)
         self.behaviours.append(self.register)
 
-        self.debug_info = DisplayStoreInfo(self, 1.0)
+        self.debug_info = DisplayStoreInfo(self, 0.2)
         self.behaviours.append(self.debug_info)
 
         self.call_later(10.0, self.launch_pass_time)
@@ -302,14 +346,15 @@ class Store(Agent):
         self.distribute_tasks = DistributeTasks(self)
         self.behaviours.append(self.distribute_tasks)
 
-        self.reward_auction = RewardAuction(self)
-        self.behaviours.append(self.reward_auction)
-
 
     def launch_pass_time(self):
-        self.pass_time = PassTime(self, 1.0, self.register.notify)
+        self.pass_time = PassTime(self, 0.2, self.register.notify)
         self.behaviours.append(self.pass_time)
         self.pass_time.on_start()
+
+        self.reward_auction = RewardAuction(self)
+        self.behaviours.append(self.reward_auction)
+        self.reward_auction.on_start()
 
     def on_start(self):
         super(Store, self).on_start()
@@ -324,4 +369,5 @@ class Store(Agent):
             return self.afternoon_shift
         else:
             return []
+
 
