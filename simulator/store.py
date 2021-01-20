@@ -10,6 +10,7 @@ import datetime
 import random
 
 import utils
+import macros
 
 class RegisterWorkers(FipaSubscribeProtocol):
 
@@ -70,6 +71,37 @@ class PassTime(TimedBehaviour):
         message.set_content(self.agent.date)
         self.notify(message)
 
+        # Start distributing tasks
+
+        display_message(self.agent.aid.localname, "Starting to distribute tasks")
+        current_shift = self.agent.get_current_shift()
+       
+        if current_shift != None:
+            display_message(self.agent.aid.localname, current_shift)
+        
+            for worker_name in current_shift:
+                message = ACLMessage(ACLMessage.REQUEST)
+                message.set_protocol(ACLMessage.FIPA_REQUEST_PROTOCOL)
+                message.set_ontology(macros.TASK_ONTOLOGY)
+                message.add_receiver(worker_name)
+                message.set_content(str(self.agent.date))
+                self.agent.send(message)
+
+
+
+
+
+
+        # message = ACLMessage(ACLMessage.REQUEST)
+        # message.set_protocol(ACLMessage.FIPA_REQUEST_PROTOCOL)
+        # message.add_receiver(AID(name=time_agent_name))
+        # message.set_content('time')
+
+        # self.comport_request = CompRequest2(self, message)
+        # self.comport_temp = ComportTemporal(self, 8.0, message)
+
+
+
     def createShifts(self):
         number_of_days = utils.daysOfMonth(self.agent.date.month)
         workers = utils.getWorkers(self.agent.workers_aid)
@@ -102,6 +134,7 @@ class PassTime(TimedBehaviour):
 
             self.agent.schedule[day] = day_shift
 
+
     def setShifts(self, day):
         self.agent.morning_shift = self.agent.schedule[day][1]
         self.agent.afternoon_shift = self.agent.schedule[day][2]
@@ -120,6 +153,7 @@ class PassTime(TimedBehaviour):
                     break
             message = ACLMessage(ACLMessage.REQUEST)
             message.set_protocol(ACLMessage.FIPA_REQUEST_PROTOCOL)
+            message.set_ontology(macros.SHIFT_ONTOLOGY)
             message.add_receiver(receiver_aid)
             message.set_content('Change work')
             self.agent.send(message)
@@ -140,6 +174,20 @@ class DisplayStoreInfo(TimedBehaviour):
                                                 + "Date: " + str(self.agent.date) + "\n")
 
 
+class DistributeTasks(FipaRequestProtocol):
+
+    def __init__(self, agent):
+        super(DistributeTasks, self).__init__(agent=agent,
+                                           message=None,
+                                           is_initiator=True)
+
+
+    def handle_inform(self, message):
+        if message.ontology == macros.TASK_ONTOLOGY:
+            display_message(self.agent.aid.localname, message.content)
+
+
+
 class Store(Agent):
 
     def __init__(self, aid):
@@ -153,13 +201,16 @@ class Store(Agent):
         self.date = datetime.datetime(2020, 1, 1)
 
         self.register = RegisterWorkers(self)
-
         self.behaviours.append(self.register)
 
         self.debug_info = DisplayStoreInfo(self, 1.0)
         self.behaviours.append(self.debug_info)
 
         self.call_later(10.0, self.launch_pass_time)
+
+        self.distribute_tasks = DistributeTasks(self)
+        self.behaviours.append(self.distribute_tasks)
+        
 
     def launch_pass_time(self):
         self.pass_time = PassTime(self, 1.0, self.register.notify)
@@ -169,3 +220,17 @@ class Store(Agent):
     def on_start(self):
         super(Store, self).on_start()
         display_message(self.aid.localname, 'store initalized')
+    
+
+    def get_current_shift(self):
+        
+        if self.date.hour >= 8 and self.date.hour < 16:
+            return self.morning_shift
+    
+        elif self.date.hour >= 16:
+            return self.afternoon_shift
+
+        else:
+            return []
+
+    
